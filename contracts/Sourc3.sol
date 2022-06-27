@@ -9,20 +9,16 @@ contract Sourc3 {
     struct Organization {
         string name_;
         address creator_;
+
+        mapping (address => uint8) memberInfo_;
     }
 
     struct Project {
         string name_;
         address creator_;
         uint64 organizationId_;
-    }
 
-    struct Repo {
-        string name_;
-        address creator_;
-        uint64 projectId_;
-        uint64 curObjsNumber_;
-        bytes32 nameHash_;
+        mapping (address => uint8) memberInfo_;
     }
 
     struct GitRef {
@@ -35,6 +31,26 @@ contract Sourc3 {
         bytes20 hash_;
         bytes data_;
     }
+
+    struct Meta {
+        //uint64 id_;
+        uint8 type_;
+        bytes20 hash_;
+        uint32 dataSize_;
+    }
+
+    struct Repo {
+        string name_;
+        address creator_;
+        uint64 projectId_;
+        uint64 curObjsNumber_;
+        bytes32 nameHash_;
+
+        mapping (address => uint8) memberInfo_;
+        mapping (bytes32 => GitRef) refs_; // ????
+        mapping (uint64 => Meta) metas_;
+        mapping (bytes20 => bytes) data_;
+    }
     
     mapping (uint64 => Organization) organizations_;
     mapping (uint64 => Project) projects_;
@@ -44,7 +60,11 @@ contract Sourc3 {
     }
 
     function createOrganization(string memory name) public {
-        //msg.sender
+        uint64 id = lastOrganizationId_++;
+        organizations_[id].name_ = name; 
+        organizations_[id].creator_ = msg.sender;
+        // TODO check this
+        organizations_[id].memberInfo_[msg.sender] = 1; // all permissions
     }
 
     function modifyOrganization(uint64 organizationId, string memory name) public {
@@ -54,6 +74,12 @@ contract Sourc3 {
     }
 
     function createProject(string memory name, uint64 organizationId) public {
+        uint64 id = lastProjectId_++;
+        projects_[id].name_ = name;
+        projects_[id].creator_ = msg.sender;
+        projects_[id].organizationId_ = organizationId;
+        // TODO check this
+        projects_[id].memberInfo_[msg.sender] = 1; // all permissions
     }
 
     function modifyProject(string memory name, uint64 organizationId, uint64 projectId) public {
@@ -63,6 +89,13 @@ contract Sourc3 {
     }
 
     function createRepo(string memory name, uint64 projectId) public {
+        uint64 id = lastRepoId_++;
+        repos_[id].name_ = name;
+        repos_[id].creator_ = msg.sender;
+        repos_[id].projectId_ = projectId;
+        repos_[id].curObjsNumber_ = 0;
+        // TODO check this
+        repos_[id].memberInfo_[msg.sender] = 1; // all permissions
     }
 
     function modifyRepo(string memory name, uint64 repoId) public {
@@ -74,9 +107,23 @@ contract Sourc3 {
     //
 
     function pushRefs(uint64 repoId, GitRef[] memory refs) public {
+        // TODO check permissions
+        for (uint i = 0; i < refs.length; i++) {
+            repos_[repoId].refs_[sha256(bytes(refs[i].name_))] = refs[i];
+        }
     }
 
-    function pushObjects(uint64 repoId, PackedObject[] memory objects) public {}
+    function pushObjects(uint64 repoId, PackedObject[] memory objects) public {
+        // TODO check permissions
+        for (uint i = 0; i < objects.length; i++) {
+            uint64 id = repos_[repoId].curObjsNumber_++;
+            repos_[repoId].metas_[id].type_ = objects[i].type_;
+            repos_[repoId].metas_[id].hash_ = objects[i].hash_;
+            repos_[repoId].metas_[id].dataSize_ = uint32(objects[i].data_.length);
+
+            repos_[repoId].data_[objects[i].hash_] = objects[i].data_;
+        }
+    }
 
     // Repo member
 
