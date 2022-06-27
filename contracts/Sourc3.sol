@@ -147,4 +147,43 @@ contract Sourc3 {
     function modifyOrganizationMember(uint64 organizationId, address member, uint8 permissions) public {}
 
     function removeOrganizationMember(uint64 organizationId, address member) public {}
+
+    /////////////////////////////////////////////////////////////////
+    function myRepos() public view {} //id, name of each repo
+
+    function allRepos() public view {} //id, name, projectId, curObjects, repoOwner of each repo
+
+    function refsList() public view {} //name, commitHash
+
+    function repoId(address  owner, string memory name) public view {}
+
+    function projectId(address  owner, string memory name) public view {}
+
+    function organizationId(address  owner, string memory name) public view {}
+
+    function getRepoData(uint64 repoId, uint64 objId) public view {}
+
+    function getRepoMeta(uint64 repoId) public view {} // list of {hash, type, size}
+
+    function getCommit(uint64 repoId, uint64 objId) public view {} // use mygit2. ????
+
+    // function getCommitFromData() // ??????
+    // function getTree() // ??????
+    // function getTreeFromData() // ??????
+
+    function getCommits(uint64 repoId) public view {} // hash, size, type
+
+    function getTrees(uint64 repoId) public view {} // hash, size, type
+
+    function projectsList() public view {} //id, organizationId, name, creator
+
+    function projectReposList(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
+
+    function projectMembersList(uint64 projectId) public view {} // address, permissions
+
+    function organizationsList() public view {} // id, name, creator
+
+    function organizationProjectsList(uint64 organizationId) public view {} // id, name, creator
+
+    function organizationMembersList(uint64 organizationId) public view {} // address, permissions
 }
