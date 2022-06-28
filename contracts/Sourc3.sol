@@ -165,12 +165,6 @@ contract Sourc3 {
 
     function getRepoMeta(uint64 repoId) public view {} // list of {hash, type, size}
 
-    function getCommit(uint64 repoId, uint64 objId) public view {} // use mygit2. ????
-
-    // function getCommitFromData() // ??????
-    // function getTree() // ??????
-    // function getTreeFromData() // ??????
-
     function getCommits(uint64 repoId) public view {} // hash, size, type
 
     function getTrees(uint64 repoId) public view {} // hash, size, type
