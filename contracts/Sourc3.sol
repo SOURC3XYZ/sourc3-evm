@@ -169,15 +169,27 @@ contract Sourc3 {
 
     function getTrees(uint64 repoId) public view {} // hash, size, type
 
-    function projectsList() public view {} //id, organizationId, name, creator
+    function getProjectsList() public view {
 
-    function projectReposList(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
+    } //id, organizationId, name, creator
 
-    function projectMembersList(uint64 projectId) public view {} // address, permissions
+    function getProjectReposList(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
 
-    function organizationsList() public view {} // id, name, creator
+    function getProjectMembersList(uint64 projectId) public view {} // address, permissions
 
-    function organizationProjectsList(uint64 organizationId) public view {} // id, name, creator
+    function getOrganizationsList() public view returns (uint64[] memory ids, string[] memory names, address[] memory creators) {
+        // TODO calculate count of organization and use instead of lastOrganizationId_ below
+        ids = new uint64[](lastOrganizationId_ - 1);
+        names = new string[](lastOrganizationId_ - 1);
+        creators = new address[](lastOrganizationId_ - 1);
+        for (uint64 i = 1; i < lastOrganizationId_; i++) {
+            ids[i - 1] = i;
+            names[i - 1] = organizations_[i].name_;
+            creators[i - 1] = organizations_[i].creator_;
+        }
+    } // id, name, creator
 
-    function organizationMembersList(uint64 organizationId) public view {} // address, permissions
+    function getOrganizationProjectsList(uint64 organizationId) public view {} // id, name, creator
+
+    function getOrganizationMembersList(uint64 organizationId) public view {} // address, permissions
 }
