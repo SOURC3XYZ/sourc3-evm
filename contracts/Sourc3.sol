@@ -47,8 +47,8 @@ contract Sourc3 {
         bytes32 nameHash_;
 
         mapping (address => uint8) memberInfo_;
-        mapping (bytes32 => GitRef) refs_; // ????
-        mapping (uint64 => Meta) metas_;
+        GitRef[] refs_;
+        Meta[] metas_;
         mapping (bytes20 => bytes) data_;
     }
     
@@ -56,8 +56,7 @@ contract Sourc3 {
     mapping (uint64 => Project) projects_;
     mapping (uint64 => Repo) repos_;
 
-    constructor() public {
-    }
+    //constructor() public {}
 
     function createOrganization(string memory name) public {
         uint64 id = lastOrganizationId_++;
@@ -109,17 +108,20 @@ contract Sourc3 {
     function pushRefs(uint64 repoId, GitRef[] memory refs) public {
         // TODO check permissions
         for (uint i = 0; i < refs.length; i++) {
-            repos_[repoId].refs_[sha256(bytes(refs[i].name_))] = refs[i];
+            repos_[repoId].refs_.push(refs[i]);
         }
     }
 
     function pushObjects(uint64 repoId, PackedObject[] memory objects) public {
         // TODO check permissions
         for (uint i = 0; i < objects.length; i++) {
-            uint64 id = repos_[repoId].curObjsNumber_++;
-            repos_[repoId].metas_[id].type_ = objects[i].type_;
-            repos_[repoId].metas_[id].hash_ = objects[i].hash_;
-            repos_[repoId].metas_[id].dataSize_ = uint32(objects[i].data_.length);
+            Meta memory meta;
+
+            meta.type_ = objects[i].type_;
+            meta.hash_ = objects[i].hash_;
+            meta.dataSize_ = uint32(objects[i].data_.length);
+
+            repos_[repoId].metas_.push(meta);
 
             repos_[repoId].data_[objects[i].hash_] = objects[i].data_;
         }
@@ -153,7 +155,9 @@ contract Sourc3 {
 
     function allRepos() public view {} //id, name, projectId, curObjects, repoOwner of each repo
 
-    function refsList() public view {} //name, commitHash
+    function refsList(uint64 repoId) public view returns (GitRef[] memory) {
+        return repos_[repoId].refs_;
+    } //name, commitHash
 
     function repoId(address  owner, string memory name) public view {}
 
@@ -161,16 +165,29 @@ contract Sourc3 {
 
     function organizationId(address  owner, string memory name) public view {}
 
-    function getRepoData(uint64 repoId, uint64 objId) public view {}
+    function getRepoData(uint64 repoId, bytes20 objHash) public view returns (bytes memory) {
+        return repos_[repoId].data_[objHash];
+    }
 
-    function getRepoMeta(uint64 repoId) public view {} // list of {hash, type, size}
+    function getRepoMeta(uint64 repoId) public view returns (Meta[] memory) {
+        return repos_[repoId].metas_;
+    }
 
     function getCommits(uint64 repoId) public view {} // hash, size, type
 
     function getTrees(uint64 repoId) public view {} // hash, size, type
 
-    function getProjectsList() public view {
-
+    function getProjectsList() public view returns (uint64[] memory ids, uint64[] memory orgIds, string[] memory names, address[] memory creators) {
+        ids = new uint64[](lastProjectId_ - 1);
+        orgIds = new uint64[](lastProjectId_ - 1);
+        names = new string[](lastProjectId_ - 1);
+        creators = new address[](lastProjectId_ - 1);
+        for (uint64 i = 1; i < lastProjectId_; i++) {
+            ids[i - 1] = i;
+            orgIds[i - 1] = projects_[i].organizationId_;
+            names[i - 1] = projects_[i].name_;
+            creators[i - 1] = projects_[i].creator_;
+        }
     } //id, organizationId, name, creator
 
     function getProjectReposList(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
