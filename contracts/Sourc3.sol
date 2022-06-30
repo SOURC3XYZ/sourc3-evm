@@ -6,6 +6,14 @@ contract Sourc3 {
     uint64 lastOrganizationId_ = 1;
     uint64 lastProjectId_ = 1;
 
+    enum MetaType {
+        None, // !!!!!!
+        Commit,
+        Tree,
+        Blob,
+        Tag
+    }
+
     struct Organization {
         string name_;
         address creator_;
@@ -27,14 +35,14 @@ contract Sourc3 {
     }
     
     struct PackedObject {
-        uint8 type_;
+        MetaType type_;
         bytes20 hash_;
         bytes data_;
     }
 
     struct Meta {
         //uint64 id_;
-        uint8 type_;
+        MetaType type_;
         bytes20 hash_;
         uint32 dataSize_;
     }
@@ -194,9 +202,46 @@ contract Sourc3 {
         return repos_[repoId].metas_;
     }
 
-    function getCommits(uint64 repoId) public view {} // hash, size, type
+    function getCommits(uint64 repoId) public view returns (Meta[] memory) {
+        uint count = 0;
 
-    function getTrees(uint64 repoId) public view {} // hash, size, type
+        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
+            if (repos_[repoId].metas_[i].type_ == MetaType.Commit) {
+                ++count;
+            }
+        }
+
+        Meta[] memory result = new Meta[](count);
+        uint j = 0;
+        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
+            if (repos_[repoId].metas_[i].type_ == MetaType.Commit) {
+                result[j++] = repos_[repoId].metas_[i];
+            }
+        }
+
+        return result;
+    } // hash, size, type
+
+    function getTrees(uint64 repoId) public view returns (Meta[] memory) {
+        // TODO it is copy&paste
+        uint count = 0;
+
+        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
+            if (repos_[repoId].metas_[i].type_ == MetaType.Tree) {
+                ++count;
+            }
+        }
+
+        Meta[] memory result = new Meta[](count);
+        uint j = 0;
+        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
+            if (repos_[repoId].metas_[i].type_ == MetaType.Tree) {
+                result[j++] = repos_[repoId].metas_[i];
+            }
+        }
+
+        return result;
+    } // hash, size, type
 
     function getProjectsList() public view returns (uint64[] memory ids, uint64[] memory orgIds, string[] memory names, address[] memory creators) {
         ids = new uint64[](lastProjectId_ - 1);
