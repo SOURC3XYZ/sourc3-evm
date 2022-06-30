@@ -165,7 +165,7 @@ contract Sourc3 {
 
     function refsList(uint64 repoId) public view returns (GitRef[] memory) {
         return repos_[repoId].refs_;
-    } //name, commitHash
+    }
 
     function getRepoId(address owner, string memory name) public view returns (uint64) {
         for (uint64 id = 1; id < lastRepoId_; id++) {
@@ -220,7 +220,7 @@ contract Sourc3 {
         }
 
         return result;
-    } // hash, size, type
+    }
 
     function getTrees(uint64 repoId) public view returns (Meta[] memory) {
         // TODO it is copy&paste
@@ -241,7 +241,7 @@ contract Sourc3 {
         }
 
         return result;
-    } // hash, size, type
+    }
 
     function getProjectsList() public view returns (uint64[] memory ids, uint64[] memory orgIds, string[] memory names, address[] memory creators) {
         ids = new uint64[](lastProjectId_ - 1);
@@ -254,11 +254,11 @@ contract Sourc3 {
             names[i - 1] = projects_[i].name_;
             creators[i - 1] = projects_[i].creator_;
         }
-    } //id, organizationId, name, creator
+    }
 
-    function getProjectReposList(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
+    function getReposListOfProject(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
 
-    function getProjectMembersList(uint64 projectId) public view {} // address, permissions
+    function getMembersListOfProject(uint64 projectId) public view {} // address, permissions
 
     function getOrganizationsList() public view returns (uint64[] memory ids, string[] memory names, address[] memory creators) {
         // TODO calculate count of organization and use instead of lastOrganizationId_ below
@@ -270,11 +270,11 @@ contract Sourc3 {
             names[i - 1] = organizations_[i].name_;
             creators[i - 1] = organizations_[i].creator_;
         }
-    } // id, name, creator
+    }
 
-    function getOrganizationProjectsList(uint64 organizationId) public view {} // id, name, creator
+    function getProjectsListOfOrganization(uint64 organizationId) public view {} // id, name, creator
 
-    function getOrganizationMembersList(uint64 organizationId) public view {} // address, permissions
+    function getMembersListOfOrganization(uint64 organizationId) public view {} // address, permissions
 
     function isStringEqual(string memory first,string memory second) view public returns (bool) {
         return (keccak256(bytes(first)) == keccak256(bytes(second)));
