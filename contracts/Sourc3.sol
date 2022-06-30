@@ -159,9 +159,42 @@ contract Sourc3 {
     function removeOrganizationMember(uint64 organizationId, address member) public {}
 
     /////////////////////////////////////////////////////////////////
-    function myRepos() public view {} //id, name of each repo
+    function myRepos() public view returns (uint64[] memory ids, string[] memory names) {
+        uint64 count = 0;
+        for (uint64 i = 1; i < lastRepoId_; i++) {
+            if (repos_[i].creator_ == msg.sender) {
+                count++;
+            }
+        }
 
-    function allRepos() public view {} //id, name, projectId, curObjects, repoOwner of each repo
+        ids = new uint64[](count);
+        names = new string[](count);
+        uint j = 0;
+        for (uint64 i = 1; i < lastRepoId_; i++) {
+            if (repos_[i].creator_ == msg.sender) {
+                ids[j] = i;
+                names[j] = repos_[i].name_;
+                ++j;
+            }
+        }
+    }
+
+    function allRepos() public view returns (uint64[] memory ids, string[] memory names, uint64[] memory projectIds, uint64[] memory curObjcts, address[] memory creators) {
+        uint64 count = lastRepoId_ - 1;
+        ids = new uint64[](count);
+        names = new string[](count);
+        projectIds = new uint64[](count);
+        curObjcts = new uint64[](count);
+        creators = new address[](count);
+
+        for (uint64 i = 1; i < lastRepoId_; i++) {
+            ids[i-1] = i;
+            names[i-1] = repos_[i].name_;
+            projectIds[i-1] = repos_[i].projectId_;
+            curObjcts[i-1] = repos_[i].curObjsNumber_;
+            creators[i-1] = repos_[i].creator_;
+        }
+    }
 
     function refsList(uint64 repoId) public view returns (GitRef[] memory) {
         return repos_[repoId].refs_;
@@ -276,7 +309,7 @@ contract Sourc3 {
 
     function getMembersListOfOrganization(uint64 organizationId) public view {} // address, permissions
 
-    function isStringEqual(string memory first,string memory second) view public returns (bool) {
+    function isStringEqual(string memory first,string memory second) pure public returns (bool) {
         return (keccak256(bytes(first)) == keccak256(bytes(second)));
     }
 }
