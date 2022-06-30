@@ -159,11 +159,32 @@ contract Sourc3 {
         return repos_[repoId].refs_;
     } //name, commitHash
 
-    function repoId(address  owner, string memory name) public view {}
+    function getRepoId(address owner, string memory name) public view returns (uint64) {
+        for (uint64 id = 1; id < lastRepoId_; id++) {
+            if (repos_[id].creator_ == owner && isStringEqual(repos_[id].name_, name)) {
+                return id;
+            }
+        }
+        return 0;
+    }
 
-    function projectId(address  owner, string memory name) public view {}
+    function getProjectId(address owner, string memory name) public view returns (uint64) {
+        for (uint64 id = 1; id < lastProjectId_; id++) {
+            if (projects_[id].creator_ == owner && isStringEqual(projects_[id].name_, name)) {
+                return id;
+            }
+        }
+        return 0;
+    }
 
-    function organizationId(address  owner, string memory name) public view {}
+    function getOrganizationId(address owner, string memory name) public view returns (uint64) {
+        for (uint64 id = 1; id < lastOrganizationId_; id++) {
+            if (organizations_[id].creator_ == owner && isStringEqual(organizations_[id].name_, name)) {
+                return id;
+            }
+        }
+        return 0;
+    }
 
     function getRepoData(uint64 repoId, bytes20 objHash) public view returns (bytes memory) {
         return repos_[repoId].data_[objHash];
@@ -209,4 +230,8 @@ contract Sourc3 {
     function getOrganizationProjectsList(uint64 organizationId) public view {} // id, name, creator
 
     function getOrganizationMembersList(uint64 organizationId) public view {} // address, permissions
+
+    function isStringEqual(string memory first,string memory second) view public returns (bool) {
+        return (keccak256(bytes(first)) == keccak256(bytes(second)));
+    }
 }
