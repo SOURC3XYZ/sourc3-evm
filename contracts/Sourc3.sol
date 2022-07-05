@@ -32,17 +32,24 @@ contract Sourc3 {
 
         mapping (address => uint8) memberInfo_;
     }
+
+    uint64 organizationsNumber_ = 0;
+    uint64 projectsNumber_ = 0;
+    uint64 reposNumber_ = 0;
     
     mapping (uint64 => Organization) organizations_;
     mapping (uint64 => Project) projects_;
     mapping (uint64 => Repo) repos_;
 
     function createOrganization(string memory name) public {
+        // TODO maybe check organization name
         uint64 id = lastOrganizationId_++;
         organizations_[id].name_ = name; 
         organizations_[id].creator_ = msg.sender;
         // TODO check this
         organizations_[id].memberInfo_[msg.sender] = 1; // all permissions
+
+        organizationsNumber_++;
     }
 
     function modifyOrganization(uint64 organizationId, string memory name) public {
@@ -52,12 +59,16 @@ contract Sourc3 {
     }
 
     function createProject(string memory name, uint64 organizationId) public {
+        // TODO check to exist organization
+        require(organizationId < lastOrganizationId_);
         uint64 id = lastProjectId_++;
         projects_[id].name_ = name;
         projects_[id].creator_ = msg.sender;
         projects_[id].organizationId_ = organizationId;
         // TODO check this
         projects_[id].memberInfo_[msg.sender] = 1; // all permissions
+
+        projectsNumber_++;
     }
 
     function modifyProject(string memory name, uint64 organizationId, uint64 projectId) public {
@@ -67,6 +78,8 @@ contract Sourc3 {
     }
 
     function createRepo(string memory name, uint64 projectId) public {
+        // TODO check to exist project
+        require(projectId < lastProjectId_);
         uint64 id = lastRepoId_++;
         repos_[id].name_ = name;
         repos_[id].creator_ = msg.sender;
@@ -74,6 +87,8 @@ contract Sourc3 {
         repos_[id].curObjsNumber_ = 0;
         // TODO check this
         repos_[id].memberInfo_[msg.sender] = 1; // all permissions
+
+        reposNumber_++;
     }
 
     function modifyRepo(string memory name, uint64 repoId) public {
@@ -85,7 +100,7 @@ contract Sourc3 {
     //
 
     function pushState(uint64 repoId, uint64 objsCount, uint64 metasCount, string memory expectedState, string memory state) public {
-        require(repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
         // TODO check permissions
         require(isStringEqual(expectedState, repos_[repoId].state_));
         repos_[repoId].curObjsNumber_ += objsCount;
@@ -124,7 +139,7 @@ contract Sourc3 {
     function removeOrganizationMember(uint64 organizationId, address member) public {}
 
     /////////////////////////////////////////////////////////////////
-    function myRepos() public view returns (uint64[] memory ids, string[] memory names) {
+    function getMyRepos() public view returns (uint64[] memory ids, string[] memory names) {
         uint64 count = 0;
         for (uint64 i = 1; i < lastRepoId_; i++) {
             if (repos_[i].creator_ == msg.sender) {
@@ -144,13 +159,12 @@ contract Sourc3 {
         }
     }
 
-    function allRepos() public view returns (uint64[] memory ids, string[] memory names, uint64[] memory projectIds, uint64[] memory curObjcts, address[] memory creators) {
-        uint64 count = lastRepoId_ - 1;
-        ids = new uint64[](count);
-        names = new string[](count);
-        projectIds = new uint64[](count);
-        curObjcts = new uint64[](count);
-        creators = new address[](count);
+    function getReposList() public view returns (uint64[] memory ids, string[] memory names, uint64[] memory projectIds, uint64[] memory curObjcts, address[] memory creators) {
+        ids = new uint64[](reposNumber_);
+        names = new string[](reposNumber_);
+        projectIds = new uint64[](reposNumber_);
+        curObjcts = new uint64[](reposNumber_);
+        creators = new address[](reposNumber_);
 
         for (uint64 i = 1; i < lastRepoId_; i++) {
             ids[i-1] = i;
@@ -189,10 +203,10 @@ contract Sourc3 {
     }
 
     function getProjectsList() public view returns (uint64[] memory ids, uint64[] memory orgIds, string[] memory names, address[] memory creators) {
-        ids = new uint64[](lastProjectId_ - 1);
-        orgIds = new uint64[](lastProjectId_ - 1);
-        names = new string[](lastProjectId_ - 1);
-        creators = new address[](lastProjectId_ - 1);
+        ids = new uint64[](projectsNumber_);
+        orgIds = new uint64[](projectsNumber_);
+        names = new string[](projectsNumber_);
+        creators = new address[](projectsNumber_);
         for (uint64 i = 1; i < lastProjectId_; i++) {
             ids[i - 1] = i;
             orgIds[i - 1] = projects_[i].organizationId_;
@@ -206,10 +220,9 @@ contract Sourc3 {
     function getMembersListOfProject(uint64 projectId) public view {} // address, permissions
 
     function getOrganizationsList() public view returns (uint64[] memory ids, string[] memory names, address[] memory creators) {
-        // TODO calculate count of organization and use instead of lastOrganizationId_ below
-        ids = new uint64[](lastOrganizationId_ - 1);
-        names = new string[](lastOrganizationId_ - 1);
-        creators = new address[](lastOrganizationId_ - 1);
+        ids = new uint64[](organizationsNumber_);
+        names = new string[](organizationsNumber_);
+        creators = new address[](organizationsNumber_);
         for (uint64 i = 1; i < lastOrganizationId_; i++) {
             ids[i - 1] = i;
             names[i - 1] = organizations_[i].name_;
