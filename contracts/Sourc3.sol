@@ -6,14 +6,6 @@ contract Sourc3 {
     uint64 lastOrganizationId_ = 1;
     uint64 lastProjectId_ = 1;
 
-    enum MetaType {
-        None, // !!!!!!
-        Commit,
-        Tree,
-        Blob,
-        Tag
-    }
-
     struct Organization {
         string name_;
         address creator_;
@@ -29,42 +21,21 @@ contract Sourc3 {
         mapping (address => uint8) memberInfo_;
     }
 
-    struct GitRef {
-        bytes20 commitHash_;
-        string name_;
-    }
-    
-    struct PackedObject {
-        MetaType type_;
-        bytes20 hash_;
-        bytes data_;
-    }
-
-    struct Meta {
-        //uint64 id_;
-        MetaType type_;
-        bytes20 hash_;
-        uint32 dataSize_;
-    }
-
     struct Repo {
         string name_;
         address creator_;
         uint64 projectId_;
         uint64 curObjsNumber_;
+        uint64 curMetasNumber_;
         bytes32 nameHash_;
+        string state_;
 
         mapping (address => uint8) memberInfo_;
-        GitRef[] refs_;
-        Meta[] metas_;
-        mapping (bytes20 => bytes) data_;
     }
     
     mapping (uint64 => Organization) organizations_;
     mapping (uint64 => Project) projects_;
     mapping (uint64 => Repo) repos_;
-
-    //constructor() public {}
 
     function createOrganization(string memory name) public {
         uint64 id = lastOrganizationId_++;
@@ -113,26 +84,20 @@ contract Sourc3 {
 
     //
 
-    function pushRefs(uint64 repoId, GitRef[] memory refs) public {
+    function pushState(uint64 repoId, uint64 objsCount, uint64 metasCount, string memory expectedState, string memory state) public {
+        require(repos_[repoId].projectId_ > 1);
         // TODO check permissions
-        for (uint i = 0; i < refs.length; i++) {
-            repos_[repoId].refs_.push(refs[i]);
-        }
+        require(isStringEqual(expectedState, repos_[repoId].state_));
+        repos_[repoId].curObjsNumber_ += objsCount;
+        repos_[repoId].curMetasNumber_ += metasCount;
+        repos_[repoId].state_ = state;
     }
 
-    function pushObjects(uint64 repoId, PackedObject[] memory objects) public {
-        // TODO check permissions
-        for (uint i = 0; i < objects.length; i++) {
-            Meta memory meta;
-
-            meta.type_ = objects[i].type_;
-            meta.hash_ = objects[i].hash_;
-            meta.dataSize_ = uint32(objects[i].data_.length);
-
-            repos_[repoId].metas_.push(meta);
-
-            repos_[repoId].data_[objects[i].hash_] = objects[i].data_;
-        }
+    function loadState(uint64 repoId) view public returns (string memory state, uint64 curObjects, uint64 curMetas) {
+        require(repos_[repoId].projectId_ > 1);
+        state = repos_[repoId].state_;
+        curObjects = repos_[repoId].curObjsNumber_;
+        curMetas = repos_[repoId].curMetasNumber_;
     }
 
     // Repo member
@@ -196,10 +161,6 @@ contract Sourc3 {
         }
     }
 
-    function refsList(uint64 repoId) public view returns (GitRef[] memory) {
-        return repos_[repoId].refs_;
-    }
-
     function getRepoId(address owner, string memory name) public view returns (uint64) {
         for (uint64 id = 1; id < lastRepoId_; id++) {
             if (repos_[id].creator_ == owner && isStringEqual(repos_[id].name_, name)) {
@@ -225,55 +186,6 @@ contract Sourc3 {
             }
         }
         return 0;
-    }
-
-    function getRepoData(uint64 repoId, bytes20 objHash) public view returns (bytes memory) {
-        return repos_[repoId].data_[objHash];
-    }
-
-    function getRepoMeta(uint64 repoId) public view returns (Meta[] memory) {
-        return repos_[repoId].metas_;
-    }
-
-    function getCommits(uint64 repoId) public view returns (Meta[] memory) {
-        uint count = 0;
-
-        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
-            if (repos_[repoId].metas_[i].type_ == MetaType.Commit) {
-                ++count;
-            }
-        }
-
-        Meta[] memory result = new Meta[](count);
-        uint j = 0;
-        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
-            if (repos_[repoId].metas_[i].type_ == MetaType.Commit) {
-                result[j++] = repos_[repoId].metas_[i];
-            }
-        }
-
-        return result;
-    }
-
-    function getTrees(uint64 repoId) public view returns (Meta[] memory) {
-        // TODO it is copy&paste
-        uint count = 0;
-
-        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
-            if (repos_[repoId].metas_[i].type_ == MetaType.Tree) {
-                ++count;
-            }
-        }
-
-        Meta[] memory result = new Meta[](count);
-        uint j = 0;
-        for (uint i = 0; i < repos_[repoId].metas_.length; i++) {
-            if (repos_[repoId].metas_[i].type_ == MetaType.Tree) {
-                result[j++] = repos_[repoId].metas_[i];
-            }
-        }
-
-        return result;
     }
 
     function getProjectsList() public view returns (uint64[] memory ids, uint64[] memory orgIds, string[] memory names, address[] memory creators) {
