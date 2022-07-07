@@ -240,12 +240,16 @@ contract Sourc3 {
         curObjcts = new uint64[](reposNumber_);
         creators = new address[](reposNumber_);
 
+        uint64 j = 0;
         for (uint64 i = 1; i < lastRepoId_; i++) {
-            ids[i-1] = i;
-            names[i-1] = repos_[i].name_;
-            projectIds[i-1] = repos_[i].projectId_;
-            curObjcts[i-1] = repos_[i].curObjsNumber_;
-            creators[i-1] = repos_[i].creator_;
+            if (repos_[i].creator_ != address(0)) {
+                ids[j] = i;
+                names[j] = repos_[i].name_;
+                projectIds[j] = repos_[i].projectId_;
+                curObjcts[j] = repos_[i].curObjsNumber_;
+                creators[j] = repos_[i].creator_;
+                j++;
+            }
         }
     }
 
@@ -281,15 +285,39 @@ contract Sourc3 {
         orgIds = new uint64[](projectsNumber_);
         names = new string[](projectsNumber_);
         creators = new address[](projectsNumber_);
+
+        uint64 j = 0;
         for (uint64 i = 1; i < lastProjectId_; i++) {
-            ids[i - 1] = i;
-            orgIds[i - 1] = projects_[i].organizationId_;
-            names[i - 1] = projects_[i].name_;
-            creators[i - 1] = projects_[i].creator_;
+            if (projects_[i].creator_ != address(0)) {
+                ids[j] = i;
+                orgIds[j] = projects_[i].organizationId_;
+                names[j] = projects_[i].name_;
+                creators[j] = projects_[i].creator_;
+                j++;
+            }
         }
     }
 
-    function getReposListOfProject(uint64 projectId) public view {} // id, name, curObjects, creator or owner?
+    function getReposListOfProject(uint64 projectId) public view returns (uint64[] memory ids, string[] memory names, uint64[] memory curObjsNumbers, uint64[] memory curMetasNumbers, address[] memory creators) {
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+        ids = new uint64[](projects_[projectId].reposNumber_);
+        names = new string[](projects_[projectId].reposNumber_);
+        curObjsNumbers = new uint64[](projects_[projectId].reposNumber_);
+        curMetasNumbers = new uint64[](projects_[projectId].reposNumber_);
+        creators = new address[](projects_[projectId].reposNumber_);
+
+        uint64 j = 0;
+        for (uint64 i = 1; i < lastRepoId_; i++) {
+            if (repos_[i].projectId_ == projectId) {
+                ids[j] = i;
+                names[j] = repos_[i].name_;
+                curObjsNumbers[j] = repos_[i].curObjsNumber_;
+                curMetasNumbers[j] = repos_[i].curMetasNumber_;
+                creators[j] = repos_[i].creator_;
+                j++;
+            }
+        }
+    }
 
     function getMembersListOfProject(uint64 projectId) public view {} // address, permissions
 
@@ -297,14 +325,33 @@ contract Sourc3 {
         ids = new uint64[](organizationsNumber_);
         names = new string[](organizationsNumber_);
         creators = new address[](organizationsNumber_);
+        uint64 j = 0;
         for (uint64 i = 1; i < lastOrganizationId_; i++) {
-            ids[i - 1] = i;
-            names[i - 1] = organizations_[i].name_;
-            creators[i - 1] = organizations_[i].creator_;
+            if (organizations_[i].creator_ != address(0)) {
+                ids[j] = i;
+                names[j] = organizations_[i].name_;
+                creators[j] = organizations_[i].creator_;
+                j++;
+            }
         }
     }
 
-    function getProjectsListOfOrganization(uint64 organizationId) public view {} // id, name, creator
+    function getProjectsListOfOrganization(uint64 organizationId) public view returns (uint64[] memory ids, string[] memory names, address[] memory creators) {
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        ids = new uint64[](organizations_[organizationId].projectsNumber_);
+        names = new string[](organizations_[organizationId].projectsNumber_);
+        creators = new address[](organizations_[organizationId].projectsNumber_);
+
+        uint64 j = 0;
+        for (uint64 i = 1; i < lastProjectId_; i++) {
+            if (projects_[i].organizationId_ == organizationId) {
+                ids[j] = i;
+                names[j] = organizations_[i].name_;
+                creators[j] = organizations_[i].creator_;
+                j++;
+            }
+        }
+    }
 
     function getMembersListOfOrganization(uint64 organizationId) public view {} // address, permissions
 
