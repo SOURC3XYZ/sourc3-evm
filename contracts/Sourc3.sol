@@ -9,6 +9,7 @@ contract Sourc3 {
     struct Organization {
         string name_;
         address creator_;
+        uint64 projectsNumber_;
 
         mapping (address => uint8) memberInfo_;
     }
@@ -17,6 +18,7 @@ contract Sourc3 {
         string name_;
         address creator_;
         uint64 organizationId_;
+        uint64 reposNumber_;
 
         mapping (address => uint8) memberInfo_;
     }
@@ -53,14 +55,21 @@ contract Sourc3 {
     }
 
     function modifyOrganization(uint64 organizationId, string memory name) public {
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        // TODO check permissions
+        organizations_[organizationId].name_ = name;
     }
 
     function removeOrganzation(uint64 organizationId) public {
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        // TODO check permissions
+        require(organizations_[organizationId].projectsNumber_ == 0);
+        delete organizations_[organizationId];
+        organizationsNumber_--;
     }
 
     function createProject(string memory name, uint64 organizationId) public {
-        // TODO check to exist organization
-        require(organizationId < lastOrganizationId_);
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
         uint64 id = lastProjectId_++;
         projects_[id].name_ = name;
         projects_[id].creator_ = msg.sender;
@@ -69,17 +78,27 @@ contract Sourc3 {
         projects_[id].memberInfo_[msg.sender] = 1; // all permissions
 
         projectsNumber_++;
+        organizations_[organizationId].projectsNumber_++;
     }
 
-    function modifyProject(string memory name, uint64 organizationId, uint64 projectId) public {
+    function modifyProject(string memory name, uint64 projectId) public {
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+        // TODO check permissions
+        projects_[projectId].name_ = name;
     }
 
     function removeProject(uint64 projectId) public {
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+        // TODO check permissions
+        require(projects_[projectId].reposNumber_ == 0);
+        // TODO check order of commands
+        organizations_[projects_[projectId].organizationId_].projectsNumber_--;
+        delete projects_[projectId];
+        projectsNumber_--;
     }
 
     function createRepo(string memory name, uint64 projectId) public {
-        // TODO check to exist project
-        require(projectId < lastProjectId_);
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
         uint64 id = lastRepoId_++;
         repos_[id].name_ = name;
         repos_[id].creator_ = msg.sender;
@@ -89,6 +108,7 @@ contract Sourc3 {
         repos_[id].memberInfo_[msg.sender] = 1; // all permissions
 
         reposNumber_++;
+        projects_[projectId].reposNumber_++;
     }
 
     function modifyRepo(string memory name, uint64 repoId) public {
@@ -98,8 +118,10 @@ contract Sourc3 {
     }
 
     function removeRepo(uint64 repoId) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0));
         // TODO check permissions
+        // TODO check order of commands
+        projects_[repos_[repoId].projectId_].reposNumber_--;
         delete repos_[repoId];
         reposNumber_--;
     }
