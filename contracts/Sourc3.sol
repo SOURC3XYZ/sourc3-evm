@@ -69,7 +69,7 @@ contract Sourc3 {
     }
 
     function createProject(string memory name, uint64 organizationId) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Organization should be specified");
         uint64 id = lastProjectId_++;
         projects_[id].name_ = name;
         projects_[id].creator_ = msg.sender;
@@ -98,7 +98,7 @@ contract Sourc3 {
     }
 
     function createRepo(string memory name, uint64 projectId) public {
-        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Project should be specified");
         uint64 id = lastRepoId_++;
         repos_[id].name_ = name;
         repos_[id].creator_ = msg.sender;
