@@ -60,8 +60,8 @@ contract Sourc3 {
         organizations_[organizationId].name_ = name;
     }
 
-    function removeOrganzation(uint64 organizationId) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+    function removeOrganization(uint64 organizationId) public {
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organization");
         // TODO check permissions
         require(organizations_[organizationId].projectsNumber_ == 0);
         delete organizations_[organizationId];
@@ -88,7 +88,7 @@ contract Sourc3 {
     }
 
     function removeProject(uint64 projectId) public {
-        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
         require(projects_[projectId].reposNumber_ == 0);
         // TODO check order of commands
@@ -118,7 +118,7 @@ contract Sourc3 {
     }
 
     function removeRepo(uint64 repoId) public {
-        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0));
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         // TODO check permissions
         // TODO check order of commands
         projects_[repos_[repoId].projectId_].reposNumber_--;
@@ -253,6 +253,24 @@ contract Sourc3 {
         }
     }
 
+    function getRepo(uint64 id) public view returns (string memory, address, uint64, uint64, uint64, string memory) {
+        require(id < lastRepoId_ && repos_[id].creator_ != address(0));
+
+        return (repos_[id].name_, repos_[id].creator_, repos_[id].projectId_, repos_[id].curObjsNumber_, repos_[id].curMetasNumber_, repos_[id].state_);
+    }
+
+    function getProject(uint64 id) public view returns (string memory, address, uint64) {
+        require(id < lastProjectId_ && projects_[id].creator_ != address(0));
+
+        return (projects_[id].name_, projects_[id].creator_, projects_[id].organizationId_);
+    }
+
+    function getOrganization(uint64 id) public view returns (string memory, address) {
+        require(id < lastOrganizationId_ && organizations_[id].creator_ != address(0));
+
+        return (organizations_[id].name_, organizations_[id].creator_);
+    }
+
     function getRepoId(address owner, string memory name) public view returns (uint64) {
         for (uint64 id = 1; id < lastRepoId_; id++) {
             if (repos_[id].creator_ == owner && isStringEqual(repos_[id].name_, name)) {
@@ -355,7 +373,7 @@ contract Sourc3 {
 
     function getMembersListOfOrganization(uint64 organizationId) public view {} // address, permissions
 
-    function isStringEqual(string memory first,string memory second) pure public returns (bool) {
+    function isStringEqual(string memory first,string memory second) private pure returns (bool) {
         return (keccak256(bytes(first)) == keccak256(bytes(second)));
     }
 }

@@ -46,4 +46,25 @@ contract("Sourc3", (accounts) => {
 
         await truffleAssert.reverts(contract.createRepo(repoName, projectId, {from: creator}), "Project should be specified");
     });
+
+    it("try to remove unknown organization", async () => {
+        const creator = accounts[0];
+        const id = 1;
+
+        await truffleAssert.reverts(contract.removeOrganization(id, {from: creator}), "Unknown organization");
+    });
+
+    it("try to remove unknown project", async () => {
+        const creator = accounts[0];
+        const id = 1;
+
+        await truffleAssert.reverts(contract.removeProject(id, {from: creator}), "Unknown project");
+    });
+
+    it("try to remove unknown repository", async () => {
+        const creator = accounts[0];
+        const id = 1;
+
+        await truffleAssert.reverts(contract.removeRepo(id, {from: creator}), "Unknown repository");
+    });
 });
