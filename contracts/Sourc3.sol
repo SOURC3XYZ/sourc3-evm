@@ -55,7 +55,7 @@ contract Sourc3 {
     }
 
     function modifyOrganization(uint64 organizationId, string memory name) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organization");
         // TODO check permissions
         organizations_[organizationId].name_ = name;
     }
@@ -81,8 +81,8 @@ contract Sourc3 {
         organizations_[organizationId].projectsNumber_++;
     }
 
-    function modifyProject(string memory name, uint64 projectId) public {
-        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0));
+    function modifyProject(uint64 projectId, string memory name) public {
+        require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
         projects_[projectId].name_ = name;
     }
@@ -111,8 +111,8 @@ contract Sourc3 {
         projects_[projectId].reposNumber_++;
     }
 
-    function modifyRepo(string memory name, uint64 repoId) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+    function modifyRepo(uint64 repoId, string memory name) public {
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         // TODO check permissions
         repos_[repoId].name_ = name;
     }
