@@ -129,7 +129,7 @@ contract Sourc3 {
     //
 
     function pushState(uint64 repoId, uint64 objsCount, uint64 metasCount, string memory expectedState, string memory state) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_  != address(0), "Unknown repository");
         // TODO check permissions
         require(isStringEqual(expectedState, repos_[repoId].state_));
         repos_[repoId].curObjsNumber_ += objsCount;
@@ -138,7 +138,7 @@ contract Sourc3 {
     }
 
     function loadState(uint64 repoId) view public returns (string memory state, uint64 curObjects, uint64 curMetas) {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         state = repos_[repoId].state_;
         curObjects = repos_[repoId].curObjsNumber_;
         curMetas = repos_[repoId].curMetasNumber_;
@@ -147,21 +147,21 @@ contract Sourc3 {
     // Repo member
 
     function addRepoMember(uint64 repoId, address member, uint8 permissions) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         // TODO check permissions
         require(repos_[repoId].memberInfo_[member] == 0);
         repos_[repoId].memberInfo_[member] = permissions;
     }
 
     function modifyRepoMember(uint64 repoId, address member, uint8 permissions) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         // TODO check permissions
         require(repos_[repoId].memberInfo_[member] != 0);
         repos_[repoId].memberInfo_[member] = permissions;
     }
 
     function removeRepoMeber(uint64 repoId, address member) public {
-        require(repoId < lastRepoId_ && repos_[repoId].projectId_ > 1);
+        require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         // TODO check permissions
         require(repos_[repoId].memberInfo_[member] != 0);
         delete repos_[repoId].memberInfo_[member];
@@ -170,21 +170,21 @@ contract Sourc3 {
     // project member
 
     function addProjectMember(uint64 projectId, address member, uint8 permissions) public {
-        require(projectId < lastRepoId_ && projects_[projectId].organizationId_ > 0);
+        require(projectId < lastRepoId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
         require(projects_[projectId].memberInfo_[member] == 0);
         projects_[projectId].memberInfo_[member] = permissions;
     }
 
     function modifyProjectMember(uint64 projectId, address member, uint8 permissions) public {
-        require(projectId < lastRepoId_ && projects_[projectId].organizationId_ > 0);
+        require(projectId < lastRepoId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
         require(projects_[projectId].memberInfo_[member] != 0);
         projects_[projectId].memberInfo_[member] = permissions;
     }
 
     function removeProjectMember(uint64 projectId, address member) public {
-        require(projectId < lastRepoId_ && projects_[projectId].organizationId_ > 0);
+        require(projectId < lastRepoId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
         require(projects_[projectId].memberInfo_[member] != 0);
         delete projects_[projectId].memberInfo_[member];
@@ -192,21 +192,21 @@ contract Sourc3 {
 
     // organization member
     function addOrganizationMember(uint64 organizationId, address member, uint8 permissions) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organiztion");
         // TODO check permissions
         require( organizations_[organizationId].memberInfo_[member] == 0);
         organizations_[organizationId].memberInfo_[member] = permissions;
     }
 
     function modifyOrganizationMember(uint64 organizationId, address member, uint8 permissions) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organiztion");
         // TODO check permissions
         require( organizations_[organizationId].memberInfo_[member] != 0);
         organizations_[organizationId].memberInfo_[member] = permissions;
     }
 
     function removeOrganizationMember(uint64 organizationId, address member) public {
-        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0));
+        require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organiztion");
         // TODO check permissions
         require( organizations_[organizationId].memberInfo_[member] == 0);
         delete organizations_[organizationId].memberInfo_[member];

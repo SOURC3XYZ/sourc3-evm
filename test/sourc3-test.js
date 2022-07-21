@@ -125,4 +125,18 @@ contract("Sourc3", (accounts) => {
 
         await truffleAssert.reverts(contract.modifyRepo(id, "test", {from: creator}), "Unknown repository");
     });
+
+    it("try to push state to unknown repository", async () => {
+        const creator = accounts[0];
+        const id = 1;
+
+        await truffleAssert.reverts(contract.pushState(id, 1, 1, "", "test", {from: creator}), "Unknown repository");
+    });
+
+    it("try to load state of unknown repository", async () => {
+        const creator = accounts[0];
+        const id = 1;
+
+        await truffleAssert.reverts(contract.loadState(id, {from: creator}), "Unknown repository");
+    });
 });
