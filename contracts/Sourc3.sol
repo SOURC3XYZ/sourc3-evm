@@ -63,7 +63,7 @@ contract Sourc3 {
     function removeOrganization(uint64 organizationId) public {
         require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organization");
         // TODO check permissions
-        require(organizations_[organizationId].projectsNumber_ == 0);
+        require(organizations_[organizationId].projectsNumber_ == 0, "Organization should be empty");
         delete organizations_[organizationId];
         organizationsNumber_--;
     }
@@ -90,7 +90,7 @@ contract Sourc3 {
     function removeProject(uint64 projectId) public {
         require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Unknown project");
         // TODO check permissions
-        require(projects_[projectId].reposNumber_ == 0);
+        require(projects_[projectId].reposNumber_ == 0, "Project should be empty");
         // TODO check order of commands
         organizations_[projects_[projectId].organizationId_].projectsNumber_--;
         delete projects_[projectId];
@@ -131,7 +131,7 @@ contract Sourc3 {
     function pushState(uint64 repoId, uint64 objsCount, uint64 metasCount, string memory expectedState, string memory state) public {
         require(repoId < lastRepoId_ && repos_[repoId].creator_  != address(0), "Unknown repository");
         // TODO check permissions
-        require(isStringEqual(expectedState, repos_[repoId].state_));
+        require(isStringEqual(expectedState, repos_[repoId].state_), "wrong expected state");
         repos_[repoId].curObjsNumber_ += objsCount;
         repos_[repoId].curMetasNumber_ += metasCount;
         repos_[repoId].state_ = state;

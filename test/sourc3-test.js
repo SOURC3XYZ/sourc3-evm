@@ -82,22 +82,27 @@ contract("Sourc3", (accounts) => {
         });
     });
 
-    describe("test normal case", () => {
+    describe("test repository", () => {
         const creator = accounts[0];
         const organizationName = "organization";
         const projectName = "project";
         const repoName = "repo";
 
+        let organizationId;
+        let projectId;
+        let repoId;
+
         beforeEach(async () => {
             contract = await Sourc3.new();
 
             await contract.createOrganization("organization", {from: creator});
-            let organizationId = await contract.getOrganizationId(creator, organizationName);
+            organizationId = await contract.getOrganizationId(creator, organizationName);
 
             await contract.createProject(projectName, organizationId, {from: creator});
-            let projectId = await contract.getProjectId(creator, projectName);
+            projectId = await contract.getProjectId(creator, projectName);
             
             await contract.createRepo(repoName, projectId, {from: creator});
+            repoId = await contract.getRepoId(creator, repoName);
         });
 
         it("create organization, project, repository", async () => {
@@ -112,24 +117,18 @@ contract("Sourc3", (accounts) => {
             const newRepoName = "repo2";
     
             // modify organization
-            let organizationId = await contract.getOrganizationId(creator, organizationName);
-    
             await contract.modifyOrganization(organizationId, newOrganizationName, {from: creator});
             let newOrganizationId = await contract.getOrganizationId(creator, newOrganizationName);
     
             assert.equal(organizationId.toNumber(), newOrganizationId.toNumber());
     
             // modify project
-            let projectId = await contract.getProjectId(creator, projectName);
-    
             await contract.modifyProject(projectId, newProjectName, {from: creator});
             let newProjectId = await contract.getProjectId(creator, newProjectName);
     
             assert.equal(projectId.toNumber(), newProjectId.toNumber());
     
             // modify repository
-            let repoId = await contract.getRepoId(creator, repoName);
-    
             await contract.modifyRepo(repoId, newRepoName, {from: creator});
             let newRepoId = await contract.getRepoId(creator, newRepoName);
     
@@ -140,7 +139,6 @@ contract("Sourc3", (accounts) => {
             const state = "test state";
             const objsCount = 1;
             const metasCount = 1;
-            let repoId = await contract.getRepoId(creator, repoName);
             let result = await contract.loadState(repoId);
 
             assert.equal("", result.state);
@@ -153,6 +151,49 @@ contract("Sourc3", (accounts) => {
             assert.equal(state, result.state);
             assert.equal(objsCount, result.curObjects.toNumber());
             assert.equal(metasCount, result.curMetas.toNumber());
+
+            const newState = "new state";
+
+            await contract.pushState(repoId, objsCount, metasCount, state, newState, {from: creator});
+            result = await contract.loadState(repoId);
+
+            assert.equal(newState, result.state);
+            assert.equal(objsCount + objsCount, result.curObjects.toNumber());
+            assert.equal(metasCount + metasCount, result.curMetas.toNumber());
+        });
+
+        it("try to push failed state", async () => {
+            const state = "test state";
+            const newState = "new state";
+            const objsCount = 1;
+            const metasCount = 1;
+            await contract.pushState(repoId, objsCount, metasCount, "", state, {from: creator});
+
+            await truffleAssert.reverts(contract.pushState(repoId, objsCount, metasCount, "", newState, {from: creator}), "wrong expected state");
+        });
+
+        it("remove repository, project, organiztion", async () => {
+            await contract.removeRepo(repoId);
+
+            let repos = await contract.getReposList();
+    
+            assert.isTrue(repos.ids.length == 0);
+
+            await contract.removeProject(projectId);
+
+            await contract.removeOrganization(organizationId);
+
+            let organizations = await contract.getOrganizationsList();
+
+            assert.isTrue(organizations.ids.length == 0);
+        });
+
+        it("try to remove not empty project", async () => {
+            await truffleAssert.reverts(contract.removeProject(projectId), "Project should be empty");
+        });
+
+        it("try to remove not empty organization", async () => {
+            await truffleAssert.reverts(contract.removeOrganization(organizationId), "Organization should be empty");
         });
     });
 });
