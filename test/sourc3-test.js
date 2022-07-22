@@ -95,7 +95,7 @@ contract("Sourc3", (accounts) => {
         beforeEach(async () => {
             contract = await Sourc3.new();
 
-            await contract.createOrganization("organization", {from: creator});
+            await contract.createOrganization(organizationName, {from: creator});
             organizationId = await contract.getOrganizationId(creator, organizationName);
 
             await contract.createProject(projectName, organizationId, {from: creator});
@@ -194,6 +194,84 @@ contract("Sourc3", (accounts) => {
 
         it("try to remove not empty organization", async () => {
             await truffleAssert.reverts(contract.removeOrganization(organizationId), "Organization should be empty");
+        });
+
+        it("try to create an organization with non-unique name", async () => {
+            await truffleAssert.reverts(contract.createOrganization(organizationName, {from: creator}), "Organization name should be unique");
+        });
+
+        it("try to rename organization to non-unique name", async () => {
+            const newOrganizationName = "organization 2";
+
+            await contract.createOrganization(newOrganizationName, {from: creator})
+
+            let newOrganizationId = await contract.getOrganizationId(creator, newOrganizationName);
+
+            await truffleAssert.reverts(contract.modifyOrganization(newOrganizationId, organizationName, {from: creator}), "Organization name should be unique");
+        });
+
+        it("try to create, remove and create organization with same name", async () => {
+            const newOrganizationName = "organization 2";
+
+            await contract.createOrganization(newOrganizationName, {from: creator})
+
+            let newOrganizationId = await contract.getOrganizationId(creator, newOrganizationName);
+
+            await contract.removeOrganization(newOrganizationId, {from: creator});
+
+            await contract.createOrganization(newOrganizationName, {from: creator})
+        });
+
+        it("try to create a project with non-unique name", async () => {
+            await truffleAssert.reverts(contract.createProject(projectName, organizationId, {from: creator}), "Project name should be unique");
+        });
+
+        it("try to rename project to non-unique name", async () => {
+            const newProjectName = "project 2";
+
+            await contract.createProject(newProjectName, organizationId, {from: creator})
+
+            let newProjectId = await contract.getProjectId(creator, newProjectName);
+
+            await truffleAssert.reverts(contract.modifyProject(newProjectId, projectName, {from: creator}), "Project name should be unique");
+        });
+
+        it("try to create, remove and create project with same name", async () => {
+            const newProjectName = "project 2";
+
+            await contract.createProject(newProjectName, organizationId, {from: creator})
+
+            let newProjectId = await contract.getProjectId(creator, newProjectName);
+
+            await contract.removeProject(newProjectId, {from: creator});
+
+            await contract.createProject(newProjectName, organizationId, {from: creator})
+        });
+
+        it("try to create a repository with non-unique name", async () => {
+            await truffleAssert.reverts(contract.createRepo(repoName, projectId, {from: creator}), "Repository name should be unique");
+        });
+
+        it("try to rename repository to non-unique name", async () => {
+            const newRepoName = "repo 2";
+
+            await contract.createRepo(newRepoName, projectId, {from: creator})
+
+            let newRepoId = await contract.getRepoId(creator, newRepoName);
+
+            await truffleAssert.reverts(contract.modifyRepo(newRepoId, repoName, {from: creator}), "Repository name should be unique");
+        });
+
+        it("try to create, remove and create repository with same name", async () => {
+            const newRepoName = "repo 2";
+
+            await contract.createRepo(newRepoName, projectId, {from: creator})
+
+            let newRepoId = await contract.getRepoId(creator, newRepoName);
+
+            await contract.removeRepo(newRepoId, {from: creator});
+
+            await contract.createRepo(newRepoName, projectId, {from: creator})
         });
     });
 });

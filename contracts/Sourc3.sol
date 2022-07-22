@@ -12,6 +12,7 @@ contract Sourc3 {
         uint64 projectsNumber_;
 
         mapping (address => uint8) memberInfo_;
+        mapping (bytes32 => bool) projectNameHashes_;
     }
 
     struct Project {
@@ -21,6 +22,7 @@ contract Sourc3 {
         uint64 reposNumber_;
 
         mapping (address => uint8) memberInfo_;
+        mapping (bytes32 => bool) repoNameHashes_;
     }
 
     struct Repo {
@@ -29,7 +31,6 @@ contract Sourc3 {
         uint64 projectId_;
         uint64 curObjsNumber_;
         uint64 curMetasNumber_;
-        bytes32 nameHash_;
         string state_;
 
         mapping (address => uint8) memberInfo_;
@@ -43,8 +44,11 @@ contract Sourc3 {
     mapping (uint64 => Project) projects_;
     mapping (uint64 => Repo) repos_;
 
+    mapping (bytes32 => bool) organizationNameHashes_;
+
     function createOrganization(string memory name) public {
         // TODO maybe check organization name
+        require(organizationNameHashes_[keccak256(bytes(name))] == false, "Organization name should be unique");
         uint64 id = lastOrganizationId_++;
         organizations_[id].name_ = name; 
         organizations_[id].creator_ = msg.sender;
@@ -52,24 +56,30 @@ contract Sourc3 {
         organizations_[id].memberInfo_[msg.sender] = 1; // all permissions
 
         organizationsNumber_++;
+        organizationNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function modifyOrganization(uint64 organizationId, string memory name) public {
         require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organization");
+        require(organizationNameHashes_[keccak256(bytes(name))] == false, "Organization name should be unique");
         // TODO check permissions
+        delete organizationNameHashes_[keccak256(bytes(organizations_[organizationId].name_))];
         organizations_[organizationId].name_ = name;
+        organizationNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function removeOrganization(uint64 organizationId) public {
         require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Unknown organization");
         // TODO check permissions
         require(organizations_[organizationId].projectsNumber_ == 0, "Organization should be empty");
+        delete organizationNameHashes_[keccak256(bytes(organizations_[organizationId].name_))];
         delete organizations_[organizationId];
         organizationsNumber_--;
     }
 
     function createProject(string memory name, uint64 organizationId) public {
         require(organizationId < lastOrganizationId_ && organizations_[organizationId].creator_ != address(0), "Organization should be specified");
+        require(organizations_[organizationId].projectNameHashes_[keccak256(bytes(name))] == false, "Project name should be unique");
         uint64 id = lastProjectId_++;
         projects_[id].name_ = name;
         projects_[id].creator_ = msg.sender;
@@ -79,12 +89,16 @@ contract Sourc3 {
 
         projectsNumber_++;
         organizations_[organizationId].projectsNumber_++;
+        organizations_[organizationId].projectNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function modifyProject(uint64 projectId, string memory name) public {
         require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Unknown project");
+        require(organizations_[projects_[projectId].organizationId_].projectNameHashes_[keccak256(bytes(name))] == false, "Project name should be unique");
         // TODO check permissions
+        delete organizations_[projects_[projectId].organizationId_].projectNameHashes_[keccak256(bytes(projects_[projectId].name_))];
         projects_[projectId].name_ = name;
+        organizations_[projects_[projectId].organizationId_].projectNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function removeProject(uint64 projectId) public {
@@ -93,12 +107,14 @@ contract Sourc3 {
         require(projects_[projectId].reposNumber_ == 0, "Project should be empty");
         // TODO check order of commands
         organizations_[projects_[projectId].organizationId_].projectsNumber_--;
+        delete organizations_[projects_[projectId].organizationId_].projectNameHashes_[keccak256(bytes(projects_[projectId].name_))];
         delete projects_[projectId];
         projectsNumber_--;
     }
 
     function createRepo(string memory name, uint64 projectId) public {
         require(projectId < lastProjectId_ && projects_[projectId].creator_ != address(0), "Project should be specified");
+        require(projects_[projectId].repoNameHashes_[keccak256(bytes(name))] == false, "Repository name should be unique");
         uint64 id = lastRepoId_++;
         repos_[id].name_ = name;
         repos_[id].creator_ = msg.sender;
@@ -109,12 +125,16 @@ contract Sourc3 {
 
         reposNumber_++;
         projects_[projectId].reposNumber_++;
+        projects_[projectId].repoNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function modifyRepo(uint64 repoId, string memory name) public {
         require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
+        require(projects_[repos_[repoId].projectId_].repoNameHashes_[keccak256(bytes(name))] == false, "Repository name should be unique");
         // TODO check permissions
+        delete projects_[repos_[repoId].projectId_].repoNameHashes_[keccak256(bytes(repos_[repoId].name_))];
         repos_[repoId].name_ = name;
+        projects_[repos_[repoId].projectId_].repoNameHashes_[keccak256(bytes(name))] = true;
     }
 
     function removeRepo(uint64 repoId) public {
@@ -122,6 +142,7 @@ contract Sourc3 {
         // TODO check permissions
         // TODO check order of commands
         projects_[repos_[repoId].projectId_].reposNumber_--;
+        delete projects_[repos_[repoId].projectId_].repoNameHashes_[keccak256(bytes(repos_[repoId].name_))];
         delete repos_[repoId];
         reposNumber_--;
     }
