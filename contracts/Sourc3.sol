@@ -158,7 +158,7 @@ contract Sourc3 {
         repos_[repoId].state_ = state;
     }
 
-    function loadState(uint64 repoId) view public returns (string memory state, uint64 curObjects, uint64 curMetas) {
+    function loadState(uint64 repoId) public view returns (string memory state, uint64 curObjects, uint64 curMetas) {
         require(repoId < lastRepoId_ && repos_[repoId].creator_ != address(0), "Unknown repository");
         state = repos_[repoId].state_;
         curObjects = repos_[repoId].curObjsNumber_;

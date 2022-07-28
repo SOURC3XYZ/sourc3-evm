@@ -1,5 +1,5 @@
-const Migrations = artifacts.require("Migrations");
+const Sourc3 = artifacts.require("Sourc3");
 
 module.exports = function (deployer) {
-  deployer.deploy(Migrations);
+  deployer.deploy(Sourc3);
 };
